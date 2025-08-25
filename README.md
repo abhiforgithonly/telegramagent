@@ -39,7 +39,7 @@ A sophisticated Telegram bot powered by OpenAI's GPT that provides natural conve
 
 2. **Install dependencies**
    ```bash
-   pip install -r requirements.txt
+   pip install python-telegram-bot aiohttp python-dotenv openai
    ```
 
 3. **Create environment file**
@@ -59,15 +59,19 @@ A sophisticated Telegram bot powered by OpenAI's GPT that provides natural conve
    python telegram_agent_bot.py
    ```
 
-## 📋 Requirements
+## 📋 Dependencies
 
-Create a `requirements.txt` file with:
+Install these packages using pip:
 
+```bash
+pip install python-telegram-bot aiohttp python-dotenv openai
 ```
-python-telegram-bot==20.7
-aiohttp==3.9.1
-python-dotenv==1.0.0
-```
+
+**Package Details:**
+- `python-telegram-bot` - Telegram Bot API wrapper
+- `aiohttp` - Async HTTP client for OpenAI API calls  
+- `python-dotenv` - Environment variable management
+- `openai` - Official OpenAI Python client (optional but recommended)
 
 ## 🔧 Configuration
 
@@ -198,7 +202,7 @@ nohup python3 telegram_agent_bot.py &
 # 1. Install Python from python.org (3.7+)
 # 2. Open Command Prompt or PowerShell
 cd path\to\your\bot\folder
-pip install -r requirements.txt
+pip install python-telegram-bot aiohttp python-dotenv openai
 python telegram_agent_bot.py
 ```
 
@@ -209,7 +213,7 @@ brew install python3
 
 # 2. Setup the bot
 cd /path/to/your/bot/folder
-pip3 install -r requirements.txt
+pip3 install python-telegram-bot aiohttp python-dotenv openai
 python3 telegram_agent_bot.py
 ```
 
@@ -289,7 +293,7 @@ curl -s "https://api.telegram.org/bot<YOUR_TOKEN>/getMe"
 #### Module Import Errors
 ```bash
 # Reinstall dependencies
-pip install --upgrade -r requirements.txt
+pip install --upgrade python-telegram-bot aiohttp python-dotenv openai
 ```
 
 ### Logging
