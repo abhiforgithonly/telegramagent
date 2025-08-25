@@ -177,10 +177,10 @@ telegram_agent_bot.py
 **Windows:**
 ```cmd
 # Using Command Prompt
-python telegram_agent_bot.py
+python final_bot.py
 
 # Using PowerShell  
-python telegram_agent_bot.py
+python final_bot.py
 
 # Keep running in background (Windows)
 # Use Task Scheduler or run in a separate command window
@@ -189,10 +189,10 @@ python telegram_agent_bot.py
 **macOS/Linux:**
 ```bash
 # Direct execution
-python3 telegram_agent_bot.py
+python3 final_bot.py
 
 # Background execution (keeps running after closing terminal)
-nohup python3 telegram_agent_bot.py &
+nohup python3 final_bot.py &
 ```
 
 ### 💻 Platform-Specific Setup
@@ -203,7 +203,7 @@ nohup python3 telegram_agent_bot.py &
 # 2. Open Command Prompt or PowerShell
 cd path\to\your\bot\folder
 pip install python-telegram-bot aiohttp python-dotenv openai
-python telegram_agent_bot.py
+python final_bot.py
 ```
 
 #### macOS Setup  
@@ -214,7 +214,7 @@ brew install python3
 # 2. Setup the bot
 cd /path/to/your/bot/folder
 pip3 install python-telegram-bot aiohttp python-dotenv openai
-python3 telegram_agent_bot.py
+python3 final_bot.py
 ```
 
 ### Production Deployment
