@@ -1,5 +1,6 @@
+
 #!/usr/bin/env python3
-"""AI-Powered Telegram Agent Bot"""
+"""AI-Powered Telegram Agent Bot - Fixed Version"""
 
 import os
 import logging
@@ -30,7 +31,8 @@ class LLMProcessor:
             return self._fallback_analysis(message)
         
         try:
-            async with aiohttp.ClientSession() as session:
+            timeout = aiohttp.ClientTimeout(total=10)  # Add timeout
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 payload = {
                     "model": "gpt-3.5-turbo",
                     "messages": [{
@@ -52,6 +54,12 @@ class LLMProcessor:
                         content = result['choices'][0]['message']['content'].strip()
                         content = content.replace("```json", "").replace("```", "").strip()
                         return json.loads(content)
+                    else:
+                        logger.warning(f"OpenAI API error: {response.status}")
+        except asyncio.TimeoutError:
+            logger.warning("LLM analysis timed out")
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON decode error in LLM analysis: {e}")
         except Exception as e:
             logger.warning(f"LLM analysis failed: {e}")
         
@@ -96,7 +104,8 @@ class LLMProcessor:
         history = self.conversation_history.get(user_id, [])
         
         try:
-            async with aiohttp.ClientSession() as session:
+            timeout = aiohttp.ClientTimeout(total=15)  # Add timeout
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 # Build conversation context
                 messages = [
                     {"role": "system", "content": "You are a helpful AI assistant in a Telegram bot. Be friendly, concise, and helpful. Keep responses under 200 words unless specifically asked for more detail."}
@@ -133,6 +142,10 @@ class LLMProcessor:
                         # Update conversation history
                         self._update_history(user_id, message, bot_response)
                         return bot_response
+                    else:
+                        logger.warning(f"OpenAI API error: {response.status} - {await response.text()}")
+        except asyncio.TimeoutError:
+            logger.warning("LLM response generation timed out")
         except Exception as e:
             logger.warning(f"LLM response generation failed: {e}")
         
@@ -155,15 +168,26 @@ class LLMProcessor:
     
     def _fallback_response(self, message: str) -> str:
         """Simple fallback responses when LLM is unavailable"""
-        responses = [
-            "I understand. How can I help you with that?",
-            "That's interesting! Tell me more.",
-            "I'm here to help. What would you like to know?",
-            "Thanks for sharing that with me.",
-            "I see. Is there anything specific you'd like assistance with?"
-        ]
-        # Simple hash-based selection for consistency
-        return responses[hash(message) % len(responses)]
+        m = message.lower()
+        
+        # More intelligent fallback responses based on keywords
+        if any(word in m for word in ["hello", "hi", "hey"]):
+            return "Hello! Nice to meet you. How can I help you today?"
+        elif any(word in m for word in ["thanks", "thank you"]):
+            return "You're welcome! Is there anything else I can help you with?"
+        elif any(word in m for word in ["bye", "goodbye", "see you"]):
+            return "Goodbye! Feel free to message me anytime you need help."
+        elif "?" in message:
+            return "That's a great question! I'm here to help, though my AI features might be limited right now."
+        else:
+            responses = [
+                "I understand. How can I help you with that?",
+                "That's interesting! Tell me more.",
+                "I'm here to help. What would you like to know?",
+                "Thanks for sharing that with me.",
+                "I see. Is there anything specific you'd like assistance with?"
+            ]
+            return responses[hash(message) % len(responses)]
     
     def clear_history(self, user_id: str):
         """Clear conversation history for a user"""
@@ -174,7 +198,13 @@ class TelegramAgentBot:
     """Main Telegram bot class with AI agent capabilities"""
     
     def __init__(self, telegram_token: str):
-        self.app = Application.builder().token(telegram_token).build()
+        # Build application with better error handling
+        try:
+            self.app = Application.builder().token(telegram_token).build()
+        except Exception as e:
+            logger.error(f"Failed to initialize Telegram Application: {e}")
+            raise
+            
         self.llm = LLMProcessor()
         self.user_sessions = {}  # Track user sessions
         
@@ -318,24 +348,43 @@ Ready to chat! 🚀"""
             )
     
     def run(self):
-        """Start the bot"""
+        """Start the bot with improved error handling"""
         logger.info("🚀 Starting Telegram Agent Bot...")
         
         try:
-            self.app.run_polling(drop_pending_updates=True)
+            # Use asyncio to run the bot
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            # Start polling with error handling
+            self.app.run_polling(
+                drop_pending_updates=True,
+                close_loop=False,
+                stop_signals=None  # Disable signal handling to avoid conflicts
+            )
+            
         except KeyboardInterrupt:
             logger.info("👋 Bot stopped by user")
         except Exception as e:
             logger.error(f"Bot error: {e}")
+            # Print more detailed error information
+            import traceback
+            logger.error(f"Detailed error: {traceback.format_exc()}")
             raise
 
 def main():
-    """Main entry point"""
+    """Main entry point with enhanced error handling"""
     # Check for required token
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
         logger.error("❌ Missing TELEGRAM_BOT_TOKEN environment variable!")
         print("Please set TELEGRAM_BOT_TOKEN in your .env file or environment variables.")
+        return 1
+    
+    # Validate token format
+    if not token.startswith(('bot', '1', '2', '3', '4', '5', '6', '7', '8', '9')):
+        logger.error("❌ Invalid TELEGRAM_BOT_TOKEN format!")
+        print("Token should start with bot prefix or be numeric.")
         return 1
     
     # Optional: Check for OpenAI API key
@@ -345,12 +394,21 @@ def main():
         print("Tip: Set OPENAI_API_KEY for enhanced AI responses.")
     
     try:
+        # Test token validity first
+        logger.info("🔍 Validating Telegram bot token...")
+        
         bot = TelegramAgentBot(token)
         bot.run()
         return 0
         
     except Exception as e:
         logger.error(f"💥 Failed to start bot: {e}")
+        print(f"\nDetailed error: {e}")
+        print("\nTroubleshooting tips:")
+        print("1. Check your TELEGRAM_BOT_TOKEN is correct")
+        print("2. Ensure you have internet connectivity")
+        print("3. Try: pip install --upgrade python-telegram-bot httpx aiohttp")
+        print("4. Or pin versions: pip install python-telegram-bot==20.7 httpx==0.24.1")
         return 1
 
 if __name__ == "__main__":
