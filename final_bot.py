@@ -1,6 +1,6 @@
 
 #!/usr/bin/env python3
-"""AI-Powered Telegram Agent Bot - Fixed Version"""
+
 
 import os
 import logging
@@ -413,3 +413,4 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
+
